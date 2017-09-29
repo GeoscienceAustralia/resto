@@ -424,7 +424,8 @@ class Functions_users {
         switch ($this->dbDriver->hashing) {
             case 'sha1':
                 return RestoUtil::encrypt($password);
-                break;
+            case 'crypt':
+                return crypt($password, '$5$rounds=5000$'.$this->dbDriver->hashsalt.'$');
             default:
                 return password_hash($password, PASSWORD_BCRYPT);
         }
@@ -440,7 +441,8 @@ class Functions_users {
         switch ($this->dbDriver->hashing) {
             case 'sha1':
                 return $this->password_hash($password) === $hash ? true : false;
-                break;
+            case 'crypt':
+                return crypt($password, '$5$rounds=5000$'.$this->dbDriver->hashsalt.'$') === $hash ? true : false;
             default:
                 return password_verify($password, $hash);
         }

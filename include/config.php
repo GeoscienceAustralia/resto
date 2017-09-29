@@ -204,10 +204,12 @@ return array(
         'sortParams' => array('startdate'),
 
         /*
-         * Password encryption method (sha1 or bcrypt)
+         * Password encryption method (sha1, crypt or bcrypt)
          * Note that bcrypt is only supported by PHP >= 5.5.0
+         * hashsalt value is used in crypt
          */
-        'hashing' => 'sha1',
+        'hashing' => 'crypt',
+        'hashsalt' => 'twotopoweroffour',
 
         /*
          * Database user with READ+WRITE privileges (see http://github.com/jjrom/resto/README.md)

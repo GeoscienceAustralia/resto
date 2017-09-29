@@ -121,6 +121,9 @@ abstract class RestoDatabaseDriver {
         }
         if (isset($config['hashing'])) {
             $this->hashing = $config['hashing'];
+            if ($this->hashing === 'crypt' && isset($config['hashsalt'])) {
+                $this->hashsalt = $config['hashsalt'];
+            }
         }
     }
 
