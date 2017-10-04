@@ -19,16 +19,16 @@ SUPERUSER=postgres
 SCHEMA=resto
 DB=resto
 BCRYPT=NO
-SALT=""
-usage="## resto - Create administrator user account\n\n  Usage $0 -u <admin user name (default 'admin')> -p <admin user password> [-c <salt for crypt hashing> -B <use bcrypt hashing (needs PHP >= 5.5.0)> -d <databasename (default resto)> -S <schemaname (default resto)> -s <superuser (default postgres)>]\n"
-while getopts "d:u:p:s:S:c:Bh" options; do
+CRYPT=NO
+usage="## resto - Create administrator user account\n\n  Usage $0 -u <admin user name (default 'admin')> -p <admin user password> [-C <use crypt hashing> -B <use bcrypt hashing (needs PHP >= 5.5.0)> -d <databasename (default resto)> -S <schemaname (default resto)> -s <superuser (default postgres)>]\n"
+while getopts "d:u:p:s:S:CBh" options; do
     case $options in
         d ) DB=`echo $OPTARG`;;
         u ) USER=`echo $OPTARG`;;
         p ) PASSWORD=`echo $OPTARG`;;
         s ) SUPERUSER=`echo $OPTARG`;;
         S ) SCHEMA=`echo $OPTARG`;;
-        c ) SALT=`echo $OPTARG`;;
+        C ) CRYPT=YES;;
         B ) BCRYPT=YES;;
         h ) echo -e $usage;;
         \? ) echo -e $usage
@@ -45,11 +45,11 @@ fi
 # Change password !!!
 if [ "$BCRYPT" = "NO" ]
 then
-    if [ "$SALT" = "" ]
+    if [ "$CRYPT" = "NO" ]
     then
       HASH=`php -r "echo sha1('$PASSWORD');"`
     else
-      HASH=`php -r "echo crypt('$PASSWORD','\\$5\\$rounds=5000\\$$SALT\\$');"`
+      HASH=`php -r "echo crypt('$PASSWORD','\\$5\\$rounds=5000\\$'.base64_encode(openssl_random_pseudo_bytes(16)).'\\$');"`
     fi
 else
     HASH=`php -r "echo password_hash('$PASSWORD', PASSWORD_BCRYPT);"`
