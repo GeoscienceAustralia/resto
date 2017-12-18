@@ -111,7 +111,14 @@ class RestoFeature {
          */
         if (isset($this->featureArray['properties']['resourceInfos'])) {
             
-            if (!isset($this->featureArray['properties']['resourceInfos']['path'])) {
+            if (isset($this->featureArray['properties']['resourceInfos']['redirect'])) {
+                /*
+                 * We're acting as a redirector to an external URL.
+                 */
+                header('Location: ' . $this->featureArray['properties']['resourceInfos']['redirect']);
+                return true;
+            }
+            else if (!isset($this->featureArray['properties']['resourceInfos']['path'])) {
                 RestoLogUtil::httpError(404);
             }
            

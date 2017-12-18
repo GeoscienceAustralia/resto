@@ -234,6 +234,7 @@ class RestoContext {
             'languages',
             'osDescription',
             'passphrase',
+            'redirectExternalDownload',
             'resetPasswordUrl',
             'storeQuery',
             'streamMethod',
