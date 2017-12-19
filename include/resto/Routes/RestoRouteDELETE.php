@@ -125,7 +125,7 @@ class RestoRouteDELETE extends RestoRoute {
             /*
              * Store query
              */
-            if ($this->context->storeQuery === true) {
+            if ($this->context->isStoreQueryEnabled('remove')) {
                 $this->user->storeQuery($this->context->method, 'remove', $collection->name, null, $this->context->query, $this->context->getUrl());
             }
             
@@ -178,7 +178,7 @@ class RestoRouteDELETE extends RestoRoute {
             /*
              * Store query
              */
-            if ($this->context->storeQuery === true) {
+            if ($this->context->isStoreQueryEnabled('remove')) {
                 $this->user->storeQuery($this->context->method, 'remove', $collection->name, $feature->identifier, $this->context->query, $this->context->getUrl());
             }
             

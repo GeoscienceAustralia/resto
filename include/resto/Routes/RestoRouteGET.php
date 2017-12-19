@@ -442,7 +442,7 @@ class RestoRouteGET extends RestoRoute {
             /*
              * Store query
              */
-            if ($this->context->storeQuery === true) {
+            if ($this->context->isStoreQueryEnabled($action)) {
                 $this->user->storeQuery($this->context->method, $action, isset($collectionName) ? $collectionName : '*', null, $this->context->query, $this->context->getUrl());
             }
 
@@ -737,7 +737,7 @@ class RestoRouteGET extends RestoRoute {
          *
          */
         else if (!isset($segments[3])) {
-            if ($this->context->storeQuery === true) {
+            if ($this->context->isStoreQueryEnabled('resource')) {
                 $this->user->storeQuery($this->context->method, 'resource', $collection->name, $feature->identifier, $this->context->query, $this->context->getUrl());
             }
             return $feature;
@@ -1211,7 +1211,7 @@ class RestoRouteGET extends RestoRoute {
         /*
          * Rights + fullfill license requirements + license signed = download and exit
          */
-        if ($this->context->storeQuery === true) {
+        if ($this->context->isStoreQueryEnabled('download')) {
             $user->storeQuery($this->context->method, 'download',  $collection->name, $feature->identifier, $this->context->query, $this->context->getUrl());
         }
         $feature->download();

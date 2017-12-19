@@ -633,7 +633,7 @@ class RestoRoutePOST extends RestoRoute {
         /*
          * Store query
          */
-        if ($this->context->storeQuery === true) {
+        if ($this->context->isStoreQueryEnabled('insert')) {
             $this->user->storeQuery($this->context->method, 'insert', $collection->name, $feature->identifier, $this->context->query, $this->context->getUrl());
         }
 
