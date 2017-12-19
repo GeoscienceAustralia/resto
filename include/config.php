@@ -128,6 +128,12 @@ return array(
         'streamMethod' => 'php',
 
         /*
+         * Whether to proxy external resource downloads (false) or redirect
+         * the client to the external URL (true).
+         */
+        'redirectExternalDownload' => false,
+
+        /*
          * Automatic user validation on activation
          *
          * If set to 'true' the user is automatically validated on activation
