@@ -106,7 +106,7 @@ class RestoRoutePUT extends RestoRoute {
             
             $collection->loadFromJSON($data, true);
             
-            if ($this->context->storeQuery === true) {
+            if ($this->context->isStoreQueryEnabled('update')) {
                 $this->user->storeQuery($this->context->method, 'update', $collection->name, null, $this->context->query, $this->context->getUrl());
             }
             return RestoLogUtil::success('Collection ' . $collection->name . ' updated');

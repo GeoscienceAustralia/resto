@@ -14,6 +14,11 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+set -eu
+set -o pipefail
+
+SRCDIR=
+TARGETDIR=
 usage="## RESTo deployment\n\n  Usage $0 -s <RESTO_HOME> -t <RESTO_TARGET>\n"
 while getopts "s:t:h" options; do
     case $options in

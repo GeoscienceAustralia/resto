@@ -14,14 +14,19 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+set -eu
+set -o pipefail
+
 USER=admin
+PASSWORD=
 SUPERUSER=postgres
 SCHEMA=resto
+HOSTNAME_OPT=
 DB=resto
 BCRYPT=NO
 CRYPT=NO
-usage="## resto - Create administrator user account\n\n  Usage $0 -u <admin user name (default 'admin')> -p <admin user password> [-C <use crypt hashing> -B <use bcrypt hashing (needs PHP >= 5.5.0)> -d <databasename (default resto)> -S <schemaname (default resto)> -s <superuser (default postgres)>]\n"
-while getopts "d:u:p:s:S:CBh" options; do
+usage="## resto - Create administrator user account\n\n  Usage $0 -u <admin user name (default 'admin')> -p <admin user password> [-C <use crypt hashing> -B <use bcrypt hashing (needs PHP >= 5.5.0)> -d <databasename (default resto)> -S <schemaname (default resto)> -s <superuser (default postgres)> -H <server HOSTNAME>]\n"
+while getopts "d:u:p:s:S:CBH:h" options; do
     case $options in
         d ) DB=`echo $OPTARG`;;
         u ) USER=`echo $OPTARG`;;
@@ -30,6 +35,7 @@ while getopts "d:u:p:s:S:CBh" options; do
         S ) SCHEMA=`echo $OPTARG`;;
         C ) CRYPT=YES;;
         B ) BCRYPT=YES;;
+        H ) HOSTNAME_OPT=`echo "-h "$OPTARG`;;
         h ) echo -e $usage;;
         \? ) echo -e $usage
             exit 1;;
@@ -55,6 +61,6 @@ else
     HASH=`php -r "echo password_hash('$PASSWORD', PASSWORD_BCRYPT);"`
 fi
 ACTIVATIONCODE=`php -r "echo sha1(mt_rand() . microtime());"`
-psql -d $DB -U $SUPERUSER << EOF
+psql -d $DB -U $SUPERUSER $HOSTNAME_OPT << EOF
 INSERT INTO ${SCHEMA}.users (email,groups,username,password,activationcode,activated,registrationdate) VALUES ('$USER','{"admin"}','$USER','$HASH','$ACTIVATIONCODE', 1, now());
 EOF

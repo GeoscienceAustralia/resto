@@ -280,7 +280,7 @@ class RestoFeatureUtil {
      */
     private function setDownloadService(&$properties, $thisUrl, $collection) {
         $properties['services']['download'] = array(
-            'url' => RestoUtil::isUrl($properties['resource']) ? $properties['resource'] : $thisUrl. '/download'
+            'url' => RestoUtil::isUrl($properties['resource']) && !$this->context->redirectExternalDownload ? $properties['resource'] : $thisUrl . '/download'
         );
         $properties['services']['download']['mimeType'] = isset($properties['resourceMimeType']) ? $properties['resourceMimeType'] : 'application/unknown';
         if (isset($properties['resourceSize']) && $properties['resourceSize']) {
@@ -291,7 +291,8 @@ class RestoFeatureUtil {
         }
 
         /*
-         * If resource is local (i.e. not external url), set resourceInfos array
+         * If resource is local (i.e. not external url) or we're acting as a
+         * redirector then add the internal "resourceInfos" data.
          */
         if (!RestoUtil::isUrl($properties['resource'])) {
             $properties['resourceInfos'] = array(
@@ -301,7 +302,11 @@ class RestoFeatureUtil {
                 'checksum' => isset($properties['services']['download']['checksum']) ? $properties['services']['download']['checksum'] : null
             );
         }
-
+        else if ($this->context->redirectExternalDownload) {
+            $properties['resourceInfos'] = array(
+                'redirect' => $properties['resource'],
+            );
+        }
     }
 
     /**

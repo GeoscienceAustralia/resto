@@ -171,6 +171,16 @@ class RestoContext {
     }
 
     /**
+     * Returns whether a given action should be logged in the history table.
+     *
+     * @param string $action
+     * @return boolean
+     */
+    public function isStoreQueryEnabled($action) {
+        return isset($this->storeQuery) && (is_array($this->storeQuery) ? in_array($action, $this->storeQuery, true) : ($this->storeQuery === true));
+    }
+
+    /**
      * Initialize context variable
      *
      * @param array $config configuration
@@ -234,6 +244,7 @@ class RestoContext {
             'languages',
             'osDescription',
             'passphrase',
+            'redirectExternalDownload',
             'resetPasswordUrl',
             'storeQuery',
             'streamMethod',

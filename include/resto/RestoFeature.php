@@ -105,17 +105,34 @@ class RestoFeature {
         }
         
         /*
-         * Download hosted resource with support of Range and Partial Content
-         * (See http://stackoverflow.com/questions/157318/resumable-downloads-when-using-php-to-send-the-file)
+         * First check for "resourceInfos" which contains private internal
+         * information about the actual file to download.
+         * See also "setDownloadService()" in "Utils/RestoFeatureUtil.php".
          */
         if (isset($this->featureArray['properties']['resourceInfos'])) {
             
-            if (!isset($this->featureArray['properties']['resourceInfos']['path']) || !is_file($this->featureArray['properties']['resourceInfos']['path'])) {
+            if (isset($this->featureArray['properties']['resourceInfos']['redirect'])) {
+                /*
+                 * We're acting as a redirector to an external URL.
+                 */
+                header('Location: ' . $this->featureArray['properties']['resourceInfos']['redirect']);
+                return true;
+            }
+            else if (!isset($this->featureArray['properties']['resourceInfos']['path'])) {
                 RestoLogUtil::httpError(404);
             }
            
-            return $this->streamLocalUrl(realpath($this->featureArray['properties']['resourceInfos']['path']), isset($this->featureArray['properties']['resourceInfos']['mimeType']) ? $this->featureArray['properties']['resourceInfos']['mimeType'] : 'application/octet-stream');
-            
+            /*
+             * Stream local file back to the client (if it exists).
+             */
+            $local_path = $this->featureArray['properties']['resourceInfos']['path'];
+            if (!is_file($local_path)) {
+                RestoLogUtil::httpError(404);
+            }
+
+            $abs_path = (strncmp($local_path, '/', 1) === 0) ? $local_path : realpath($local_path);
+            $mime_type = isset($this->featureArray['properties']['resourceInfos']['mimeType']) ? $this->featureArray['properties']['resourceInfos']['mimeType'] : 'application/octet-stream';
+            return $this->streamLocalUrl($abs_path, $mime_type);
         }
         /*
          * Resource is on an external url

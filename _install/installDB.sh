@@ -14,15 +14,21 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+set -eu
+set -o pipefail
+
 # Paths are mandatory from command line
+ROOTDIR=
 SUPERUSER=postgres
 DROPFIRST=NO
+HOSTNAME_OPT=
 DB=resto
 USER=resto
+USERPASSWORD=
 SCHEMA=resto
 DATADIR=`dirname $0`/data
-usage="## resto database installation\n\n  Usage $0 -p <resto (Read+Write database) user password> [-d <databasename> -S <schemaname> -f <PostGIS directory> -s <database SUPERUSER> -F]\n\n  -d : database name (default resto)\n  -S : schema name (default resto)\n  -f : absolute path to the directory containing postgis.sql - If not set EXTENSION mechanism will be used\n  -s : dabase SUPERUSER (default "postgres")\n  -F : WARNING - suppress existing resto schema within resto database\n"
-while getopts "f:d:s:u:p:S:hF" options; do
+usage="## resto database installation\n\n  Usage $0 -p <resto (Read+Write database) user password> [-d <databasename> -S <schemaname> -f <PostGIS directory> -s <database SUPERUSER> -F -H <server HOSTNAME>]\n\n  -d : database name (default resto)\n  -S : schema name (default resto)\n  -f : absolute path to the directory containing postgis.sql - If not set EXTENSION mechanism will be used\n  -s : dabase SUPERUSER (default "postgres")\n  -F : WARNING - suppress existing resto schema within resto database\n"
+while getopts "f:d:s:u:p:S:hFH:" options; do
     case $options in
         f ) ROOTDIR=`echo $OPTARG`;;
         d ) DB=`echo $OPTARG`;;
@@ -31,6 +37,7 @@ while getopts "f:d:s:u:p:S:hF" options; do
         u ) USER=`echo $OPTARG`;;
         p ) USERPASSWORD=`echo $OPTARG`;;
         F ) DROPFIRST=YES;;
+        H ) HOSTNAME_OPT=`echo "-h "$OPTARG`;;
         h ) echo -e $usage;;
         \? ) echo -e $usage
             exit 1;;
@@ -49,37 +56,43 @@ then
     exit 1
 fi
 
+if [ "$DROPFIRST" = "YES" ]
+then
+    dropdb --if-exists -U $SUPERUSER $HOSTNAME_OPT $DB
+    dropuser --if-exists -U $SUPERUSER $HOSTNAME_OPT $USER
+fi
+
 # Create DB
-createdb $DB -U $SUPERUSER -E UTF8
-createlang -U $SUPERUSER plpgsql $DB
+createdb -U $SUPERUSER $HOSTNAME_OPT -E UTF8 $DB
+createlang -U $SUPERUSER $HOSTNAME_OPT plpgsql $DB || true
 
 # Make db POSTGIS compliant
 if [ "$ROOTDIR" = "" ]
 then
-    psql -d $DB -U $SUPERUSER -c "CREATE EXTENSION postgis; CREATE EXTENSION postgis_topology;"
+    psql -d $DB -U $SUPERUSER $HOSTNAME_OPT -c "CREATE EXTENSION postgis; CREATE EXTENSION postgis_topology;"
 else
     # Example : $ROOTDIR = /usr/local/pgsql/share/contrib/postgis-1.5/
     postgis=`echo $ROOTDIR/postgis.sql`
     projections=`echo $ROOTDIR/spatial_ref_sys.sql`
-    psql -d $DB -U $SUPERUSER -f $postgis
-    psql -d $DB -U $SUPERUSER -f $projections
+    psql -d $DB -U $SUPERUSER $HOSTNAME_OPT -f $postgis
+    psql -d $DB -U $SUPERUSER $HOSTNAME_OPT -f $projections
 fi
 
 
 ###### ADMIN ACCOUNT CREATION ######
-psql -U $SUPERUSER -d $DB << EOF
+psql -U $SUPERUSER $HOSTNAME_OPT -d $DB << EOF
 CREATE USER $USER WITH PASSWORD '$USERPASSWORD' NOCREATEDB;
 EOF
 
 ##### DROP SCHEMA FIRST ######
 if [ "$DROPFIRST" = "YES" ]
 then
-psql -d $DB -U $SUPERUSER << EOF
+psql -d $DB -U $SUPERUSER $HOSTNAME_OPT << EOF
 DROP SCHEMA IF EXISTS $SCHEMA CASCADE;
 EOF
 fi
 #############CREATE DB ##############
-psql -d $DB -U $SUPERUSER << EOF
+psql -d $DB -U $SUPERUSER $HOSTNAME_OPT << EOF
 
 --
 -- Use unaccent function from postgresql >= 9
@@ -467,22 +480,22 @@ CREATE TRIGGER old_tokens_gc AFTER INSERT ON ${SCHEMA}.revokedtokens EXECUTE PRO
 EOF
 
 # Data
-psql -U $SUPERUSER -d $DB -f $DATADIR/platformsAndInstruments.sql
-psql -U $SUPERUSER -d $DB -f $DATADIR/regionsAndStates.sql
-psql -U $SUPERUSER -d $DB -f $DATADIR/en/landuses.sql
-psql -U $SUPERUSER -d $DB -f $DATADIR/en/continentsAndCountries.sql
-psql -U $SUPERUSER -d $DB -f $DATADIR/en/generalKeywords.sql
-psql -U $SUPERUSER -d $DB -f $DATADIR/fr/landuses.sql
-psql -U $SUPERUSER -d $DB -f $DATADIR/fr/continentsAndCountries.sql
-psql -U $SUPERUSER -d $DB -f $DATADIR/fr/generalKeywords.sql
+psql -U $SUPERUSER $HOSTNAME_OPT -d $DB -f $DATADIR/platformsAndInstruments.sql
+psql -U $SUPERUSER $HOSTNAME_OPT -d $DB -f $DATADIR/regionsAndStates.sql
+psql -U $SUPERUSER $HOSTNAME_OPT -d $DB -f $DATADIR/en/landuses.sql
+psql -U $SUPERUSER $HOSTNAME_OPT -d $DB -f $DATADIR/en/continentsAndCountries.sql
+psql -U $SUPERUSER $HOSTNAME_OPT -d $DB -f $DATADIR/en/generalKeywords.sql
+psql -U $SUPERUSER $HOSTNAME_OPT -d $DB -f $DATADIR/fr/landuses.sql
+psql -U $SUPERUSER $HOSTNAME_OPT -d $DB -f $DATADIR/fr/continentsAndCountries.sql
+psql -U $SUPERUSER $HOSTNAME_OPT -d $DB -f $DATADIR/fr/generalKeywords.sql
 
 # Normalize values
-psql -U $SUPERUSER -d $DB << EOF
+psql -U $SUPERUSER $HOSTNAME_OPT -d $DB << EOF
 UPDATE ${SCHEMA}.keywords SET value=normalize(value) WHERE TYPE IN ('continent', 'country', 'region', 'state', 'landuse');
 EOF
 
 # Rights
-psql -U $SUPERUSER -d $DB << EOF
+psql -U $SUPERUSER $HOSTNAME_OPT -d $DB << EOF
 
 -- CHANGE OWNER
 ALTER SCHEMA public OWNER TO $USER;

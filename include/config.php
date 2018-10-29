@@ -77,7 +77,17 @@ return array(
         'protocol' => 'auto',
 
         /*
-         * Store queries ? (i.e. logs)
+         * Whether to audit API events by adding an entry to the "history" table.
+         *  - false : Don't log any events.
+         *  - true : Log all events.
+         *  - array(string) : One or more of the following event types:
+         *    - 'create'
+         *    - 'describe'
+         *    - 'download'
+         *    - 'insert'
+         *    - 'resource'
+         *    - 'search'
+         *    - 'update'
          */
         'storeQuery' => true,
 
@@ -126,6 +136,12 @@ return array(
          *   - 'nginx' : stream through Nginx using the X-accel method
          */
         'streamMethod' => 'php',
+
+        /*
+         * Whether to proxy external resource downloads (false) or redirect
+         * the client to the external URL (true).
+         */
+        'redirectExternalDownload' => false,
 
         /*
          * Automatic user validation on activation

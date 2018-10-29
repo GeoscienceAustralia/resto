@@ -121,7 +121,7 @@ class RestoCollections {
         /*
          * Store query
          */
-        if ($this->context->storeQuery === true) {
+        if ($this->context->isStoreQueryEnabled('create')) {
             $this->user->storeQuery($this->context->method, 'create', $name, null, $this->context->query, $this->context->getUrl());
         }
         
